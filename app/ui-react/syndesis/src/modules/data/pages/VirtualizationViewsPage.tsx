@@ -1,6 +1,10 @@
 import { WithViewEditorStates, WithVirtualizationHelpers } from '@syndesis/api';
-import { RestDataService } from '@syndesis/models';
-import { ViewDefinition, ViewEditorState } from '@syndesis/models';
+import {
+  RestDataService,
+  ViewDefinition,
+  ViewEditorState,
+  ViewInfo,
+} from '@syndesis/models';
 import { Breadcrumb, PageSection, ViewHeader } from '@syndesis/ui';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
@@ -34,11 +38,14 @@ export interface IVirtualizationViewsPageRouteParams {
 }
 
 /**
- * @param virtualizationId - the virtualization whose details are being shown by this page. If
- * exists, it must equal to the [virtualizationId]{@link IVirtualizationViewsPageRouteParams#virtualizationId}.
+ * @param connectionId - the currently selected connection id.
+ * @param selectedViews - the currently selected views.
+ * @param virtualization - the virtualization whose details are being shown by this page.
  */
 
 export interface IVirtualizationViewsPageRouteState {
+  connectionId: string;
+  selectedViews: ViewInfo[];
   virtualization: RestDataService;
 }
 
@@ -93,11 +100,6 @@ export class VirtualizationViewsPage extends React.Component<
     return view.viewName !== undefined;
   }
 
-  public handleImportView(viewName: string) {
-    // TODO: implement handleImportView
-    alert('Import view ' + viewName);
-  }
-
   public render() {
     return (
       <Translation ns={['data', 'shared']}>
@@ -109,7 +111,11 @@ export class VirtualizationViewsPage extends React.Component<
                   IVirtualizationViewsPageRouteParams,
                   IVirtualizationViewsPageRouteState
                 >>
-                  {({ virtualizationId }, { virtualization }, { history }) => {
+                  {(
+                    { virtualizationId },
+                    { connectionId, selectedViews, virtualization },
+                    { history }
+                  ) => {
                     return (
                       <>
                         <Breadcrumb>
@@ -260,12 +266,11 @@ export class VirtualizationViewsPage extends React.Component<
                                                   )}
                                                   linkImportViewsHRef={resolvers.data.virtualizations.views.importSource.selectConnection(
                                                     {
+                                                      connectionId,
+                                                      selectedViews,
                                                       virtualization,
                                                     }
                                                   )}
-                                                  onImportView={
-                                                    this.handleImportView
-                                                  }
                                                   hasListData={data.length > 0}
                                                 >
                                                   {filteredAndSorted

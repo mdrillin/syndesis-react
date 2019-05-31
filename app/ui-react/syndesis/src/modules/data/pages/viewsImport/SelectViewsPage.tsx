@@ -17,12 +17,14 @@ export interface ISelectViewsRouteParams {
 }
 
 /**
+ * @param connectionId - the currently selected connection id.
+ * @param selectedViews - the currently selected views.
  * @param virtualization - the virtualization for the wizard.
- * @param connectionId - the id of the selected connection
  */
 export interface ISelectViewsRouteState {
-  virtualization: RestDataService;
   connectionId: string;
+  selectedViews: ViewInfo[];
+  virtualization: RestDataService;
 }
 
 export interface ISelectViewsPageState {
@@ -91,7 +93,7 @@ export class SelectViewsPage extends React.Component<
                 <WithRouteData<ISelectViewsRouteParams, ISelectViewsRouteState>>
                   {(
                     { virtualizationId },
-                    { virtualization, connectionId },
+                    { connectionId, selectedViews, virtualization },
                     { history }
                   ) => (
                     <WithVirtualizationHelpers>
@@ -153,7 +155,11 @@ export class SelectViewsPage extends React.Component<
                                   }
                                 )}
                                 backHref={resolvers.data.virtualizations.views.importSource.selectConnection(
-                                  { virtualization }
+                                  {
+                                    connectionId,
+                                    selectedViews,
+                                    virtualization,
+                                  }
                                 )}
                                 onCreateViews={handleCreateViews}
                                 isNextDisabled={!this.state.hasSelectedTables}

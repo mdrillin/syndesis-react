@@ -1,5 +1,5 @@
 import { WithViewEditorStates } from '@syndesis/api';
-import { RestDataService, ViewEditorState } from '@syndesis/models';
+import { RestDataService, ViewEditorState, ViewInfo } from '@syndesis/models';
 import { Breadcrumb, PageSection, ViewHeader } from '@syndesis/ui';
 import { WithRouteData } from '@syndesis/utils';
 import * as React from 'react';
@@ -21,10 +21,14 @@ export interface IVirtualizationSqlClientPageRouteParams {
 }
 
 /**
+ * @param connectionId - the selected connection id
+ * @param selectedViews - the selected views
  * @param virtualization - the virtualization being shown by this page. If
  * exists, it must equal to the [virtualizationId]{@link IVirtualizationSqlClientPageRouteParams#virtualizationId}.
  */
 export interface IVirtualizationSqlClientPageRouteState {
+  connectionId: string;
+  selectedViews: ViewInfo[];
   virtualization: RestDataService;
 }
 
@@ -44,7 +48,11 @@ export class VirtualizationSqlClientPage extends React.Component<
         IVirtualizationSqlClientPageRouteParams,
         IVirtualizationSqlClientPageRouteState
       >>
-        {({ virtualizationId }, { virtualization }, { history }) => (
+        {(
+          { virtualizationId },
+          { connectionId, selectedViews, virtualization },
+          { history }
+        ) => (
           <Translation ns={['data', 'shared']}>
             {t => (
               <>
@@ -87,7 +95,7 @@ export class VirtualizationSqlClientPage extends React.Component<
                       targetVdb={getPreviewVdbName()}
                       linkCreateView={resolvers.data.virtualizations.create()}
                       linkImportViews={resolvers.data.virtualizations.views.importSource.selectConnection(
-                        { virtualization }
+                        { connectionId, selectedViews, virtualization }
                       )}
                     >
                       {({ form, submitForm, isSubmitting }) => <></>}

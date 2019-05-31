@@ -81,7 +81,7 @@ export class DvConnectionsWithToolbar extends React.Component<
   public constructor(props: IDvConnectionsWithToolbarProps) {
     super(props);
     this.state = {
-      selectedConnection: '', // initial selected connection empty
+      selectedConnection: '',
     };
     this.handleConnectionSelectionChanged = this.handleConnectionSelectionChanged.bind(
       this
@@ -89,6 +89,15 @@ export class DvConnectionsWithToolbar extends React.Component<
   }
 
   public handleConnectionSelectionChanged(name: string, selected: boolean) {
+    if (selected) {
+      this.setState({
+        selectedConnection: name,
+      });
+    } else {
+      this.setState({
+        selectedConnection: '',
+      });
+    }
     this.props.onConnectionSelectionChanged(name, selected);
   }
 

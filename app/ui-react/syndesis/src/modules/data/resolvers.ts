@@ -3,6 +3,7 @@ import {
   RestDataService,
   SchemaNodeInfo,
   ViewDefinition,
+  ViewInfo,
 } from '@syndesis/models';
 import { makeResolver, makeResolverNoParams } from '@syndesis/utils';
 import routes from './routes';
@@ -73,29 +74,37 @@ export default {
         root: makeResolverNoParams(
           routes.virtualizations.virtualization.views.importSource.root
         ),
-        selectConnection: makeResolver<{ virtualization: RestDataService }>(
+        selectConnection: makeResolver<{
+          connectionId: string;
+          selectedViews: ViewInfo[];
+          virtualization: RestDataService;
+        }>(
           routes.virtualizations.virtualization.views.importSource
             .selectConnection,
-          ({ virtualization }) => ({
+          ({ connectionId, selectedViews, virtualization }) => ({
             params: {
               virtualizationId: virtualization.keng__id,
             },
             state: {
+              connectionId,
+              selectedViews,
               virtualization,
             },
           })
         ),
         selectViews: makeResolver<{
           connectionId: string;
+          selectedViews: ViewInfo[];
           virtualization: RestDataService;
         }>(
           routes.virtualizations.virtualization.views.importSource.selectViews,
-          ({ connectionId, virtualization }) => ({
+          ({ connectionId, selectedViews, virtualization }) => ({
             params: {
               virtualizationId: virtualization.keng__id,
             },
             state: {
               connectionId,
+              selectedViews,
               virtualization,
             },
           })

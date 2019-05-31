@@ -3,8 +3,13 @@ import * as React from 'react';
 import { DVFetch } from './DVFetch';
 import { IFetchState } from './Fetch';
 
+export interface IWithVirtualizationConnectionStatusesRenderProps
+  extends IFetchState<VirtualizationSourceStatus[]> {
+  read(): Promise<void>;
+}
+
 export interface IWithVirtualizationConnectionStatusesProps {
-  children(props: IFetchState<VirtualizationSourceStatus[]>): any;
+  children(props: IWithVirtualizationConnectionStatusesRenderProps): any;
 }
 
 export class WithVirtualizationConnectionStatuses extends React.Component<
@@ -16,7 +21,7 @@ export class WithVirtualizationConnectionStatuses extends React.Component<
         url={'metadata/syndesisSourceStatuses'}
         defaultValue={[]}
       >
-        {({ read, response }) => this.props.children(response)}
+        {({ read, response }) => this.props.children({ ...response, read })}
       </DVFetch>
     );
   }
