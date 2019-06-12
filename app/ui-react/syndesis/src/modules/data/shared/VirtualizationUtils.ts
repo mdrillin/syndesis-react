@@ -57,16 +57,18 @@ export function getViewDdl(vdbModel: RestVdbModel, viewName: string): string {
  * @param viewInfos the array of ViewInfos
  * @param schemaNode the SchemaNode from which the ViewInfo is generated
  * @param nodePath path for current SchemaNode
- * @param selectedViewNames names of views which are selected
  * @param existingViewNames names of views which exist (marked as update)
+ * @param selectedViewNames names of views which are selected. Single value "*" - means all are selected
  */
 export function generateViewInfos(
   viewInfos: ViewInfo[],
   schemaNode: SchemaNode,
   nodePath: string[],
-  selectedViewNames: string[],
-  existingViewNames: string[]
+  existingViewNames: string[],
+  selectedViewNames: string[]
 ): void {
+  const selectAll =
+    selectedViewNames.length === 1 && selectedViewNames[0] === '*';
   if (schemaNode) {
     // Generate source path from nodePath array
     const sourcePath: string[] = [];
@@ -78,10 +80,11 @@ export function generateViewInfos(
     if (schemaNode.queryable === true) {
       const vwName = schemaNode.connectionName + '_' + schemaNode.name;
       // Determine whether ViewInfo should be selected
-      const selectedState =
-        selectedViewNames.findIndex(viewName => viewName === vwName) === -1
-          ? false
-          : true;
+      const selectedState = selectAll
+        ? true
+        : selectedViewNames.findIndex(viewName => viewName === vwName) === -1
+        ? false
+        : true;
       // Deteremine whether ViewInfo is an update
       const hasExistingView =
         existingViewNames.findIndex(viewName => viewName === vwName) === -1
@@ -107,8 +110,8 @@ export function generateViewInfos(
           viewInfos,
           childNode,
           sourcePath,
-          selectedViewNames,
-          existingViewNames
+          existingViewNames,
+          selectedViewNames
         );
       }
     }
@@ -317,6 +320,20 @@ export function isDvConnectionSelected(conn: Connection) {
     isSelected = true;
   }
   return isSelected;
+}
+
+/**
+ * Determine if the Connection is selected with the DV wizard.  DV uses the options on a connection to set selection
+ * @param connection the connection
+ */
+export function setDvConnectionSelection(conn: Connection, selected: boolean) {
+  if (selected) {
+    if (conn.options) {
+      conn.options.dvSelected = DvConnectionSelection.SELECTED;
+    }
+  } else if (conn.options) {
+    conn.options.dvSelected = DvConnectionSelection.NOTSELECTED;
+  }
 }
 
 /**

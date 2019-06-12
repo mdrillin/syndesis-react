@@ -7,6 +7,7 @@ import {
 import { toValidHtmlId } from '../../helpers';
 
 import 'codemirror/addon/display/placeholder.js';
+import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/lint/lint.js';
 import './TextEditor.css';
 

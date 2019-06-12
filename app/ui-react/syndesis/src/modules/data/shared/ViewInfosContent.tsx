@@ -15,13 +15,10 @@ import i18n from '../../../i18n';
 import { ApiError } from '../../../shared';
 import { generateViewInfos } from './VirtualizationUtils';
 
-function getFilteredAndSortedViewInfos(
+function getViewInfos(
   schemaNodes: SchemaNode[],
-  activeFilters: IActiveFilter[],
-  currentSortType: ISortType,
-  isSortAscending: boolean,
-  selectedViewNames: string[],
-  existingViewNames: string[]
+  existingViewNames: string[],
+  selectedViewNames: string[]
 ) {
   const viewInfos: ViewInfo[] = [];
   if (schemaNodes && schemaNodes.length > 0) {
@@ -29,11 +26,19 @@ function getFilteredAndSortedViewInfos(
       viewInfos,
       schemaNodes[0],
       [],
-      selectedViewNames,
-      existingViewNames
+      existingViewNames,
+      selectedViewNames
     );
   }
+  return viewInfos;
+}
 
+function getFilteredAndSortedViewInfos(
+  viewInfos: ViewInfo[],
+  activeFilters: IActiveFilter[],
+  currentSortType: ISortType,
+  isSortAscending: boolean
+) {
   let filteredAndSorted = viewInfos;
   activeFilters.forEach((filter: IActiveFilter) => {
     const valueToLower = filter.value.toLowerCase();
@@ -57,8 +62,11 @@ function getFilteredAndSortedViewInfos(
 export interface IViewInfosContentProps {
   connectionName: string;
   existingViewNames: string[];
-  onViewSelected: (view: ViewInfo) => void;
-  onViewDeselected: (viewName: string) => void;
+  onSelectedViewsChanged: (views: ViewInfo[]) => void;
+}
+
+export interface IViewInfosContentState {
+  selectedViewNames: string[];
 }
 
 const filterByName = {
@@ -78,25 +86,43 @@ const sortByName = {
 
 const sortTypes: ISortType[] = [sortByName];
 
-export class ViewInfosContent extends React.Component<IViewInfosContentProps> {
+export class ViewInfosContent extends React.Component<
+  IViewInfosContentProps,
+  IViewInfosContentState
+> {
   public displayedViews: ViewInfo[] = [];
-  public selectedViewNames: string[] = [];
+  public allViewInfos: ViewInfo[] = [];
 
   public constructor(props: IViewInfosContentProps) {
     super(props);
+    this.state = {
+      selectedViewNames: ['*'], // initialize selected views state
+    };
     this.handleViewSelectionChange = this.handleViewSelectionChange.bind(this);
+    this.handleSelectAllChange = this.handleSelectAllChange.bind(this);
   }
 
   public handleViewSelectionChange(name: string, selected: boolean) {
-    if (selected) {
-      for (const viewInfo of this.displayedViews) {
-        if (viewInfo.viewName === name) {
-          this.props.onViewSelected(viewInfo);
-        }
+    const selViews = [];
+    for (const viewInfo of this.allViewInfos) {
+      if (viewInfo.viewName === name) {
+        viewInfo.selected = selected;
       }
-    } else {
-      this.props.onViewDeselected(name);
+      if (viewInfo.selected) {
+        selViews.push(viewInfo);
+      }
     }
+    const viewNames: string[] = [];
+    selViews.map(view => viewNames.push(view.viewName));
+    this.setState({
+      selectedViewNames: viewNames,
+    });
+
+    this.props.onSelectedViewsChanged(selViews);
+  }
+
+  public handleSelectAllChange(selected: boolean) {
+    this.displayedViews.map(view => (view.selected = selected));
   }
 
   public render() {
@@ -110,13 +136,16 @@ export class ViewInfosContent extends React.Component<IViewInfosContentProps> {
             defaultSortType={sortByName}
           >
             {helpers => {
-              const filteredAndSorted = getFilteredAndSortedViewInfos(
+              this.allViewInfos = getViewInfos(
                 data,
+                this.props.existingViewNames,
+                this.state.selectedViewNames
+              );
+              const filteredAndSorted = getFilteredAndSortedViewInfos(
+                this.allViewInfos,
                 helpers.activeFilters,
                 helpers.currentSortType,
-                helpers.isSortAscending,
-                this.selectedViewNames,
-                this.props.existingViewNames
+                helpers.isSortAscending
               );
               this.displayedViews = filteredAndSorted;
 
@@ -140,6 +169,7 @@ export class ViewInfosContent extends React.Component<IViewInfosContentProps> {
                       i18nResultsCount={t('shared:resultsCount', {
                         count: filteredAndSorted.length,
                       })}
+                      onSelectAllChanged={this.handleSelectAllChange}
                     >
                       <WithLoader
                         error={error}
@@ -156,7 +186,7 @@ export class ViewInfosContent extends React.Component<IViewInfosContentProps> {
                         errorChildren={<ApiError />}
                       >
                         {() =>
-                          filteredAndSorted.map(
+                          this.displayedViews.map(
                             (viewInfo: ViewInfo, index: number) => (
                               <ViewInfoListItem
                                 key={index}

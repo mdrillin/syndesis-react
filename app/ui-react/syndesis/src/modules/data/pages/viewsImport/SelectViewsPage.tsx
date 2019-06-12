@@ -26,7 +26,7 @@ export interface ISelectViewsRouteState {
 }
 
 export interface ISelectViewsPageState {
-  hasSelectedTables: boolean;
+  selectedViews: ViewInfo[];
   saveInProgress: boolean;
 }
 
@@ -34,16 +34,13 @@ export class SelectViewsPage extends React.Component<
   {},
   ISelectViewsPageState
 > {
-  public selectedViews: ViewInfo[] = []; // Maintains list of selected views
-
   public constructor(props: {}) {
     super(props);
     this.state = {
-      hasSelectedTables: false, // initialize selected tables state
       saveInProgress: false,
+      selectedViews: [], // initialize selected views state
     };
-    this.handleAddView = this.handleAddView.bind(this);
-    this.handleRemoveView = this.handleRemoveView.bind(this);
+    this.handleSetSelectedViews = this.handleSetSelectedViews.bind(this);
     this.setInProgress = this.setInProgress.bind(this);
   }
 
@@ -55,23 +52,10 @@ export class SelectViewsPage extends React.Component<
     return viewNames;
   }
 
-  public handleAddView(view: ViewInfo) {
-    this.selectedViews.push(view);
+  public handleSetSelectedViews(views: ViewInfo[]) {
+    alert('handleSetSelectedViews: ' + views.length);
     this.setState({
-      hasSelectedTables: this.selectedViews.length > 0,
-    });
-  }
-
-  public handleRemoveView(viewName: string) {
-    const index = this.selectedViews.findIndex(
-      view => view.viewName === viewName
-    );
-
-    if (index !== -1) {
-      this.selectedViews.splice(index, 1);
-    }
-    this.setState({
-      hasSelectedTables: this.selectedViews.length > 0,
+      selectedViews: views,
     });
   }
 
@@ -100,7 +84,7 @@ export class SelectViewsPage extends React.Component<
                           this.setInProgress(true);
                           const viewEditorStates = generateViewEditorStates(
                             virtualization.serviceVdbName,
-                            this.selectedViews
+                            this.state.selectedViews
                           );
                           try {
                             await refreshVirtualizationViews(
@@ -143,8 +127,9 @@ export class SelectViewsPage extends React.Component<
                                     existingViewNames={this.getExistingViewNames(
                                       data
                                     )}
-                                    onViewSelected={this.handleAddView}
-                                    onViewDeselected={this.handleRemoveView}
+                                    onSelectedViewsChanged={
+                                      this.handleSetSelectedViews
+                                    }
                                   />
                                 }
                                 cancelHref={resolvers.data.virtualizations.views.root(
@@ -156,7 +141,9 @@ export class SelectViewsPage extends React.Component<
                                   { virtualization }
                                 )}
                                 onCreateViews={handleCreateViews}
-                                isNextDisabled={!this.state.hasSelectedTables}
+                                isNextDisabled={
+                                  !(this.state.selectedViews.length > 0)
+                                }
                                 isNextLoading={this.state.saveInProgress}
                                 isLastStep={true}
                               />
